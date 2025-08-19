@@ -35,3 +35,94 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 	)
 	return i, err
 }
+
+const deleteAccount = `-- name: DeleteAccount :exec
+DELETE FROM applications
+WHERE id = $1
+`
+
+func (q *Queries) DeleteAccount(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteAccount, id)
+	return err
+}
+
+const getApplication = `-- name: GetApplication :one
+SELECT id, name, source_text, created_at FROM applications
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetApplication(ctx context.Context, id int32) (Application, error) {
+	row := q.db.QueryRowContext(ctx, getApplication, id)
+	var i Application
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SourceText,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listApplications = `-- name: ListApplications :many
+SELECT id, name, source_text, created_at FROM applications
+ORDER BY id
+LIMIT $1
+OFFSET $2
+`
+
+type ListApplicationsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListApplications(ctx context.Context, arg ListApplicationsParams) ([]Application, error) {
+	rows, err := q.db.QueryContext(ctx, listApplications, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Application{}
+	for rows.Next() {
+		var i Application
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.SourceText,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateApplication = `-- name: UpdateApplication :one
+UPDATE applications
+  SET source_text = $2
+WHERE id = $1
+RETURNING id, name, source_text, created_at
+`
+
+type UpdateApplicationParams struct {
+	ID         int32  `json:"id"`
+	SourceText string `json:"source_text"`
+}
+
+func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error) {
+	row := q.db.QueryRowContext(ctx, updateApplication, arg.ID, arg.SourceText)
+	var i Application
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.SourceText,
+		&i.CreatedAt,
+	)
+	return i, err
+}

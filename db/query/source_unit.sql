@@ -28,4 +28,3 @@ RETURNING *;
 -- name: DeleteAccount :exec
 DELETE FROM applications
 WHERE id = $1;
-
