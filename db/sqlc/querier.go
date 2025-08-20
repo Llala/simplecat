@@ -10,10 +10,20 @@ import (
 
 type Querier interface {
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
-	DeleteAccount(ctx context.Context, id int32) error
-	GetApplication(ctx context.Context, id int32) (Application, error)
+	CreateSourceUnit(ctx context.Context, arg CreateSourceUnitParams) (SourceUnit, error)
+	CreateTranslationUnit(ctx context.Context, arg CreateTranslationUnitParams) (TranslationUnit, error)
+	DeleteApplication(ctx context.Context, id int64) error
+	DeleteSourceUnit(ctx context.Context, id int64) error
+	DeleteTranslationUnit(ctx context.Context, id int64) error
+	GetApplication(ctx context.Context, id int64) (Application, error)
+	GetSourceUnit(ctx context.Context, id int64) (SourceUnit, error)
+	GetTranslationUnit(ctx context.Context, id int64) (TranslationUnit, error)
 	ListApplications(ctx context.Context, arg ListApplicationsParams) ([]Application, error)
+	ListSourceUnits(ctx context.Context, arg ListSourceUnitsParams) ([]SourceUnit, error)
+	ListTranslationUnits(ctx context.Context, arg ListTranslationUnitsParams) ([]TranslationUnit, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)
+	UpdateSourceUnit(ctx context.Context, arg UpdateSourceUnitParams) (SourceUnit, error)
+	UpdateTranslationUnit(ctx context.Context, arg UpdateTranslationUnitParams) (TranslationUnit, error)
 }
 
 var _ Querier = (*Queries)(nil)

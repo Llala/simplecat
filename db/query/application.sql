@@ -25,7 +25,6 @@ UPDATE applications
 WHERE id = $1
 RETURNING *;
 
--- name: DeleteAccount :exec
+-- name: DeleteApplication :exec
 DELETE FROM applications
 WHERE id = $1;
-

@@ -36,13 +36,13 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 	return i, err
 }
 
-const deleteAccount = `-- name: DeleteAccount :exec
+const deleteApplication = `-- name: DeleteApplication :exec
 DELETE FROM applications
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAccount(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteAccount, id)
+func (q *Queries) DeleteApplication(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteApplication, id)
 	return err
 }
 
@@ -51,7 +51,7 @@ SELECT id, name, source_text, created_at FROM applications
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetApplication(ctx context.Context, id int32) (Application, error) {
+func (q *Queries) GetApplication(ctx context.Context, id int64) (Application, error) {
 	row := q.db.QueryRowContext(ctx, getApplication, id)
 	var i Application
 	err := row.Scan(
@@ -111,7 +111,7 @@ RETURNING id, name, source_text, created_at
 `
 
 type UpdateApplicationParams struct {
-	ID         int32  `json:"id"`
+	ID         int64  `json:"id"`
 	SourceText string `json:"source_text"`
 }
 

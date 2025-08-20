@@ -1,19 +1,19 @@
 CREATE TABLE "applications" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "source_text" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "source_unit" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "application_id" int NOT NULL,
-  "translation_unit_id" int NOT NULL,
+  "translation_unit_id" int,
   "text" varchar
 );
 
 CREATE TABLE "translation_unit" (
-  "id" int PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "application_id" int NOT NULL,
   "source_unit_id" int NOT NULL,
   "text" varchar

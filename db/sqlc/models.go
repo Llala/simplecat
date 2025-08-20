@@ -10,21 +10,21 @@ import (
 )
 
 type Application struct {
-	ID         int32     `json:"id"`
+	ID         int64     `json:"id"`
 	Name       string    `json:"name"`
 	SourceText string    `json:"source_text"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
 type SourceUnit struct {
-	ID                int32          `json:"id"`
+	ID                int64          `json:"id"`
 	ApplicationID     int32          `json:"application_id"`
-	TranslationUnitID int32          `json:"translation_unit_id"`
+	TranslationUnitID sql.NullInt32  `json:"translation_unit_id"`
 	Text              sql.NullString `json:"text"`
 }
 
 type TranslationUnit struct {
-	ID            int32          `json:"id"`
+	ID            int64          `json:"id"`
 	ApplicationID int32          `json:"application_id"`
 	SourceUnitID  int32          `json:"source_unit_id"`
 	Text          sql.NullString `json:"text"`
