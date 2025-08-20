@@ -29,19 +29,10 @@ func (server *Server) setupRouter() {
 
 	router.POST("/application", server.createApplication)
 	router.GET("/application", server.ListApplication)
+	router.DELETE("/application", server.DeleteApplication)
 	router.GET("/translation", server.GetTranslation)
 	router.PATCH("/translation_unit", server.updateTranslationUnit)
 	router.GET("/text_units", server.ListTextUnits)
-	// router.POST("/users/login", server.loginUser)
-	// router.POST("/tokens/renew_access", server.renewAccessToken)
-
-	// authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
-
-	// authRoutes.POST("/accounts", server.createAccount)
-	// authRoutes.GET("/accounts/:id", server.getAccount)
-	// authRoutes.GET("/accounts", server.ListAccounts)
-
-	// authRoutes.POST("/transfers", server.createTransfer)
 
 	server.router = router
 }

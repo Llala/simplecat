@@ -20,10 +20,10 @@ CREATE TABLE "translation_unit" (
   "text" varchar
 );
 
-ALTER TABLE "source_unit" ADD FOREIGN KEY ("application_id") REFERENCES "applications" ("id");
+ALTER TABLE "source_unit" ADD FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "source_unit" ADD FOREIGN KEY ("translation_unit_id") REFERENCES "translation_unit" ("id");
+ALTER TABLE "source_unit" ADD FOREIGN KEY ("translation_unit_id") REFERENCES "translation_unit" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "translation_unit" ADD FOREIGN KEY ("application_id") REFERENCES "applications" ("id");
+ALTER TABLE "translation_unit" ADD FOREIGN KEY ("application_id") REFERENCES "applications" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "translation_unit" ADD FOREIGN KEY ("source_unit_id") REFERENCES "source_unit" ("id");
+ALTER TABLE "translation_unit" ADD FOREIGN KEY ("source_unit_id") REFERENCES "source_unit" ("id") ON DELETE CASCADE;

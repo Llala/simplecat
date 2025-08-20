@@ -76,3 +76,23 @@ func (server *Server) ListApplication(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, applications)
 }
+
+type DeleteApplicationRequest struct {
+	ID int64 `form:"id" binding:"required"`
+}
+
+func (server *Server) DeleteApplication(ctx *gin.Context) {
+	var req DeleteApplicationRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	err := server.store.DeleteApplication(ctx, req.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, err)
+}
