@@ -21,8 +21,8 @@ OFFSET $2;
 
 -- name: UpdateApplication :one
 UPDATE applications
-  SET source_text = $2
-WHERE id = $1
+  SET translation_text = COALESCE(sqlc.narg(translation_text), translation_text)
+WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: DeleteApplication :exec

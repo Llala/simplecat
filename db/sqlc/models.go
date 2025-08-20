@@ -10,10 +10,11 @@ import (
 )
 
 type Application struct {
-	ID         int64     `json:"id"`
-	Name       string    `json:"name"`
-	SourceText string    `json:"source_text"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID              int64          `json:"id"`
+	Name            string         `json:"name"`
+	SourceText      string         `json:"source_text"`
+	TranslationText sql.NullString `json:"translation_text"`
+	CreatedAt       time.Time      `json:"created_at"`
 }
 
 type SourceUnit struct {

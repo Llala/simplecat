@@ -65,6 +65,62 @@ func (q *Queries) GetSourceUnit(ctx context.Context, id int64) (SourceUnit, erro
 	return i, err
 }
 
+const listSourceUnitJoin = `-- name: ListSourceUnitJoin :many
+SELECT
+    source_unit.id,
+    source_unit.text,
+    translation_unit.text,
+    translation_unit.id
+FROM
+    source_unit 
+INNER JOIN
+    translation_unit ON source_unit.id = translation_unit.source_unit_id
+WHERE source_unit.application_id = $1
+LIMIT $2
+OFFSET $3
+`
+
+type ListSourceUnitJoinParams struct {
+	ApplicationID int32 `json:"application_id"`
+	Limit         int32 `json:"limit"`
+	Offset        int32 `json:"offset"`
+}
+
+type ListSourceUnitJoinRow struct {
+	ID     int64          `json:"id"`
+	Text   sql.NullString `json:"text"`
+	Text_2 sql.NullString `json:"text_2"`
+	ID_2   int64          `json:"id_2"`
+}
+
+func (q *Queries) ListSourceUnitJoin(ctx context.Context, arg ListSourceUnitJoinParams) ([]ListSourceUnitJoinRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSourceUnitJoin, arg.ApplicationID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSourceUnitJoinRow{}
+	for rows.Next() {
+		var i ListSourceUnitJoinRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Text,
+			&i.Text_2,
+			&i.ID_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSourceUnits = `-- name: ListSourceUnits :many
 SELECT id, application_id, translation_unit_id, text FROM source_unit
 WHERE application_id = $1

@@ -53,8 +53,11 @@ func TestUpdateApplication(t *testing.T) {
 	application1 := createRandomApplication(t)
 
 	arg := UpdateApplicationParams{
-		ID:         application1.ID,
-		SourceText: util.RandomText(120, 4, 20),
+		ID: application1.ID,
+		TranslationText: sql.NullString{
+			String: util.RandomText(120, 4, 20),
+			Valid:  true,
+		},
 	}
 
 	application2, err := testQueries.UpdateApplication(context.Background(), arg)
@@ -63,7 +66,7 @@ func TestUpdateApplication(t *testing.T) {
 
 	require.Equal(t, application1.ID, application2.ID)
 	require.Equal(t, application1.Name, application2.Name)
-	require.Equal(t, arg.SourceText, application2.SourceText)
+	require.Equal(t, arg.TranslationText, application2.TranslationText)
 	require.WithinDuration(t, application1.CreatedAt, application2.CreatedAt, time.Second)
 
 }

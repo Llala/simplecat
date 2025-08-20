@@ -35,5 +35,22 @@ RETURNING *;
 DELETE FROM source_unit
 WHERE id = $1;
 
+-- name: ListSourceUnitJoin :many
+SELECT
+    source_unit.id,
+    source_unit.text,
+    translation_unit.text,
+    translation_unit.id
+FROM
+    source_unit 
+INNER JOIN
+    translation_unit ON source_unit.id = translation_unit.source_unit_id
+WHERE source_unit.application_id = $1
+LIMIT $2
+OFFSET $3;
+
+
+
+
 
 

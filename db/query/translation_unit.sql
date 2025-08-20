@@ -4,7 +4,7 @@ INSERT INTO translation_unit (
   source_unit_id,
   text
 ) VALUES (
-  $1, $2, $3
+  $1, $2, NULL
 )
 RETURNING *;
 
@@ -16,9 +16,7 @@ WHERE id = $1 LIMIT 1;
 -- name: ListTranslationUnits :many
 SELECT * FROM translation_unit
 WHERE application_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3;
+ORDER BY id;
 
 
 -- name: UpdateTranslationUnit :one

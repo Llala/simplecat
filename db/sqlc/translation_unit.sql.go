@@ -16,19 +16,18 @@ INSERT INTO translation_unit (
   source_unit_id,
   text
 ) VALUES (
-  $1, $2, $3
+  $1, $2, NULL
 )
 RETURNING id, application_id, source_unit_id, text
 `
 
 type CreateTranslationUnitParams struct {
-	ApplicationID int32          `json:"application_id"`
-	SourceUnitID  int32          `json:"source_unit_id"`
-	Text          sql.NullString `json:"text"`
+	ApplicationID int32 `json:"application_id"`
+	SourceUnitID  int32 `json:"source_unit_id"`
 }
 
 func (q *Queries) CreateTranslationUnit(ctx context.Context, arg CreateTranslationUnitParams) (TranslationUnit, error) {
-	row := q.db.QueryRowContext(ctx, createTranslationUnit, arg.ApplicationID, arg.SourceUnitID, arg.Text)
+	row := q.db.QueryRowContext(ctx, createTranslationUnit, arg.ApplicationID, arg.SourceUnitID)
 	var i TranslationUnit
 	err := row.Scan(
 		&i.ID,
@@ -70,18 +69,10 @@ const listTranslationUnits = `-- name: ListTranslationUnits :many
 SELECT id, application_id, source_unit_id, text FROM translation_unit
 WHERE application_id = $1
 ORDER BY id
-LIMIT $2
-OFFSET $3
 `
 
-type ListTranslationUnitsParams struct {
-	ApplicationID int32 `json:"application_id"`
-	Limit         int32 `json:"limit"`
-	Offset        int32 `json:"offset"`
-}
-
-func (q *Queries) ListTranslationUnits(ctx context.Context, arg ListTranslationUnitsParams) ([]TranslationUnit, error) {
-	rows, err := q.db.QueryContext(ctx, listTranslationUnits, arg.ApplicationID, arg.Limit, arg.Offset)
+func (q *Queries) ListTranslationUnits(ctx context.Context, applicationID int32) ([]TranslationUnit, error) {
+	rows, err := q.db.QueryContext(ctx, listTranslationUnits, applicationID)
 	if err != nil {
 		return nil, err
 	}

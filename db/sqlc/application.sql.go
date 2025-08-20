@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createApplication = `-- name: CreateApplication :one
@@ -16,7 +17,7 @@ INSERT INTO applications (
 ) VALUES (
   $1, $2
 )
-RETURNING id, name, source_text, created_at
+RETURNING id, name, source_text, translation_text, created_at
 `
 
 type CreateApplicationParams struct {
@@ -31,6 +32,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 		&i.ID,
 		&i.Name,
 		&i.SourceText,
+		&i.TranslationText,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -47,7 +49,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, id int64) error {
 }
 
 const getApplication = `-- name: GetApplication :one
-SELECT id, name, source_text, created_at FROM applications
+SELECT id, name, source_text, translation_text, created_at FROM applications
 WHERE id = $1 LIMIT 1
 `
 
@@ -58,13 +60,14 @@ func (q *Queries) GetApplication(ctx context.Context, id int64) (Application, er
 		&i.ID,
 		&i.Name,
 		&i.SourceText,
+		&i.TranslationText,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listApplications = `-- name: ListApplications :many
-SELECT id, name, source_text, created_at FROM applications
+SELECT id, name, source_text, translation_text, created_at FROM applications
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -88,6 +91,7 @@ func (q *Queries) ListApplications(ctx context.Context, arg ListApplicationsPara
 			&i.ID,
 			&i.Name,
 			&i.SourceText,
+			&i.TranslationText,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -105,23 +109,24 @@ func (q *Queries) ListApplications(ctx context.Context, arg ListApplicationsPara
 
 const updateApplication = `-- name: UpdateApplication :one
 UPDATE applications
-  SET source_text = $2
-WHERE id = $1
-RETURNING id, name, source_text, created_at
+  SET translation_text = COALESCE($1, translation_text)
+WHERE id = $2
+RETURNING id, name, source_text, translation_text, created_at
 `
 
 type UpdateApplicationParams struct {
-	ID         int64  `json:"id"`
-	SourceText string `json:"source_text"`
+	TranslationText sql.NullString `json:"translation_text"`
+	ID              int64          `json:"id"`
 }
 
 func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error) {
-	row := q.db.QueryRowContext(ctx, updateApplication, arg.ID, arg.SourceText)
+	row := q.db.QueryRowContext(ctx, updateApplication, arg.TranslationText, arg.ID)
 	var i Application
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.SourceText,
+		&i.TranslationText,
 		&i.CreatedAt,
 	)
 	return i, err

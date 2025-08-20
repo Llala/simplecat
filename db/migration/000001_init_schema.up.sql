@@ -2,6 +2,7 @@ CREATE TABLE "applications" (
   "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "source_text" varchar NOT NULL,
+  "translation_text" varchar,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
