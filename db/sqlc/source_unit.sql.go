@@ -67,15 +67,16 @@ func (q *Queries) GetSourceUnit(ctx context.Context, id int64) (SourceUnit, erro
 
 const listSourceUnitJoin = `-- name: ListSourceUnitJoin :many
 SELECT
-    source_unit.id,
-    source_unit.text,
-    translation_unit.text,
-    translation_unit.id
+    source_unit.id as source_unit_id,
+    source_unit.text as source_text,
+    translation_unit.text as translation_text,
+    translation_unit.id as translation_unit_id
 FROM
     source_unit 
 INNER JOIN
     translation_unit ON source_unit.id = translation_unit.source_unit_id
 WHERE source_unit.application_id = $1
+ORDER BY source_unit.id
 LIMIT $2
 OFFSET $3
 `
@@ -87,10 +88,10 @@ type ListSourceUnitJoinParams struct {
 }
 
 type ListSourceUnitJoinRow struct {
-	ID     int64          `json:"id"`
-	Text   sql.NullString `json:"text"`
-	Text_2 sql.NullString `json:"text_2"`
-	ID_2   int64          `json:"id_2"`
+	SourceUnitID      int64          `json:"source_unit_id"`
+	SourceText        sql.NullString `json:"source_text"`
+	TranslationText   sql.NullString `json:"translation_text"`
+	TranslationUnitID int64          `json:"translation_unit_id"`
 }
 
 func (q *Queries) ListSourceUnitJoin(ctx context.Context, arg ListSourceUnitJoinParams) ([]ListSourceUnitJoinRow, error) {
@@ -103,10 +104,59 @@ func (q *Queries) ListSourceUnitJoin(ctx context.Context, arg ListSourceUnitJoin
 	for rows.Next() {
 		var i ListSourceUnitJoinRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Text,
-			&i.Text_2,
-			&i.ID_2,
+			&i.SourceUnitID,
+			&i.SourceText,
+			&i.TranslationText,
+			&i.TranslationUnitID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSourceUnitJoinNoLimit = `-- name: ListSourceUnitJoinNoLimit :many
+SELECT
+    source_unit.id as source_unit_id,
+    source_unit.text as source_text,
+    translation_unit.text as translation_text,
+    translation_unit.id as translation_unit_id
+FROM
+    source_unit 
+INNER JOIN
+    translation_unit ON source_unit.id = translation_unit.source_unit_id
+WHERE source_unit.application_id = $1
+ORDER BY source_unit.id
+`
+
+type ListSourceUnitJoinNoLimitRow struct {
+	SourceUnitID      int64          `json:"source_unit_id"`
+	SourceText        sql.NullString `json:"source_text"`
+	TranslationText   sql.NullString `json:"translation_text"`
+	TranslationUnitID int64          `json:"translation_unit_id"`
+}
+
+func (q *Queries) ListSourceUnitJoinNoLimit(ctx context.Context, applicationID int32) ([]ListSourceUnitJoinNoLimitRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSourceUnitJoinNoLimit, applicationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSourceUnitJoinNoLimitRow{}
+	for rows.Next() {
+		var i ListSourceUnitJoinNoLimitRow
+		if err := rows.Scan(
+			&i.SourceUnitID,
+			&i.SourceText,
+			&i.TranslationText,
+			&i.TranslationUnitID,
 		); err != nil {
 			return nil, err
 		}

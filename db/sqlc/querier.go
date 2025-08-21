@@ -20,6 +20,7 @@ type Querier interface {
 	GetTranslationUnit(ctx context.Context, id int64) (TranslationUnit, error)
 	ListApplications(ctx context.Context, arg ListApplicationsParams) ([]Application, error)
 	ListSourceUnitJoin(ctx context.Context, arg ListSourceUnitJoinParams) ([]ListSourceUnitJoinRow, error)
+	ListSourceUnitJoinNoLimit(ctx context.Context, applicationID int32) ([]ListSourceUnitJoinNoLimitRow, error)
 	ListSourceUnits(ctx context.Context, arg ListSourceUnitsParams) ([]SourceUnit, error)
 	ListTranslationUnits(ctx context.Context, applicationID int32) ([]TranslationUnit, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)

@@ -56,14 +56,23 @@ func (server *Server) GetTranslation(ctx *gin.Context) {
 		return
 	}
 
-	translationList, err := server.store.ListTranslationUnits(ctx, int32(req.ApplicationID))
+	// translationList, err := server.store.ListTranslationUnits(ctx, int32(req.ApplicationID))
+	translationList, err := server.store.ListSourceUnitJoinNoLimit(ctx, int32(req.ApplicationID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	resultTranslation := ""
 	for _, translation := range translationList {
-		resultTranslation = resultTranslation + translation.Text.String + ". "
+		textUnit := ""
+		if translation.TranslationText.String == "" {
+			textUnit = translation.SourceText.String
+
+		} else {
+			textUnit = translation.TranslationText.String
+		}
+
+		resultTranslation = resultTranslation + textUnit + ". "
 
 	}
 	resultTranslation = strings.TrimSpace(resultTranslation)

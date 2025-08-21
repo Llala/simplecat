@@ -37,17 +37,31 @@ WHERE id = $1;
 
 -- name: ListSourceUnitJoin :many
 SELECT
-    source_unit.id,
-    source_unit.text,
-    translation_unit.text,
-    translation_unit.id
+    source_unit.id as source_unit_id,
+    source_unit.text as source_text,
+    translation_unit.text as translation_text,
+    translation_unit.id as translation_unit_id
 FROM
     source_unit 
 INNER JOIN
     translation_unit ON source_unit.id = translation_unit.source_unit_id
 WHERE source_unit.application_id = $1
+ORDER BY source_unit.id
 LIMIT $2
 OFFSET $3;
+
+-- name: ListSourceUnitJoinNoLimit :many
+SELECT
+    source_unit.id as source_unit_id,
+    source_unit.text as source_text,
+    translation_unit.text as translation_text,
+    translation_unit.id as translation_unit_id
+FROM
+    source_unit 
+INNER JOIN
+    translation_unit ON source_unit.id = translation_unit.source_unit_id
+WHERE source_unit.application_id = $1
+ORDER BY source_unit.id;
 
 
 
