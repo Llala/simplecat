@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/Llala/simplecat/util"
 )
@@ -11,6 +12,7 @@ import (
 type Store interface {
 	Querier
 	ParseText(ctx context.Context, arg SourceUnitParams) error
+	FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (FormTextTxResult, error)
 }
 
 type SQLStore struct {
@@ -89,4 +91,53 @@ func (store *SQLStore) ParseText(ctx context.Context, arg SourceUnitParams) erro
 		return nil
 	})
 	return err
+}
+
+type TranslationUnitFormParams struct {
+	ApplicationID int64 `form:"application_id" binding:"required"`
+}
+
+type FormTextTxResult struct {
+	Application Application `json:"application"`
+}
+
+func (store *SQLStore) FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (FormTextTxResult, error) {
+	var result FormTextTxResult
+	err := store.execTx(ctx, func(q *Queries) error {
+
+		translationList, err := q.ListSourceUnitJoinNoLimit(ctx, int32(arg.ApplicationID))
+		if err != nil {
+			return err
+		}
+
+		resultTranslation := ""
+		for _, translation := range translationList {
+			textUnit := ""
+			if translation.TranslationText.String == "" {
+				textUnit = translation.SourceText.String
+
+			} else {
+				textUnit = translation.TranslationText.String
+			}
+
+			resultTranslation = resultTranslation + textUnit + ". "
+
+		}
+		resultTranslation = strings.TrimSpace(resultTranslation)
+
+		arg2 := UpdateApplicationParams{
+			ID: arg.ApplicationID,
+			TranslationText: sql.NullString{
+				String: resultTranslation,
+				Valid:  true,
+			},
+		}
+
+		result.Application, err = q.UpdateApplication(ctx, arg2)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return result, err
 }

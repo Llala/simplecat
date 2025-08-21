@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"net/http"
-	"strings"
 
 	db "github.com/Llala/simplecat/db/sqlc"
 	"github.com/gin-gonic/gin"
@@ -56,44 +55,12 @@ func (server *Server) GetTranslation(ctx *gin.Context) {
 		return
 	}
 
-	// translationList, err := server.store.ListTranslationUnits(ctx, int32(req.ApplicationID))
-	translationList, err := server.store.ListSourceUnitJoinNoLimit(ctx, int32(req.ApplicationID))
+	arg := db.TranslationUnitFormParams{
+		ApplicationID: req.ApplicationID,
+	}
+
+	application, err := server.store.FormTextTx(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-	resultTranslation := ""
-	for _, translation := range translationList {
-		textUnit := ""
-		if translation.TranslationText.String == "" {
-			textUnit = translation.SourceText.String
-
-		} else {
-			textUnit = translation.TranslationText.String
-		}
-
-		resultTranslation = resultTranslation + textUnit + ". "
-
-	}
-	resultTranslation = strings.TrimSpace(resultTranslation)
-
-	arg2 := db.UpdateApplicationParams{
-		ID: req.ApplicationID,
-		TranslationText: sql.NullString{
-			String: resultTranslation,
-			Valid:  true,
-		},
-	}
-
-	application, err := server.store.UpdateApplication(ctx, arg2)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
-			}
-		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
