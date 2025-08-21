@@ -5,7 +5,6 @@ import (
 
 	db "github.com/Llala/simplecat/db/sqlc"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 )
 
 type createApplicationRequest struct {
@@ -20,36 +19,18 @@ func (server *Server) createApplication(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.CreateApplicationParams{
-		Name:       req.Name,
-		SourceText: req.SourceText,
+	arg := db.SourceUnitParams{
+		Name: req.Name,
+		Text: req.SourceText,
 	}
 
-	account, err := server.store.CreateApplication(ctx, arg)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
-			}
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	sourceArg := db.SourceUnitParams{
-		ApplicationID: account.ID,
-		Text:          req.SourceText,
-	}
-
-	err = server.store.ParseText(ctx, sourceArg)
+	application, err := server.store.ParseTextTx(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, account)
+	ctx.JSON(http.StatusOK, application)
 }
 
 type listApplicationRequest struct {

@@ -11,8 +11,8 @@ import (
 
 type Store interface {
 	Querier
-	ParseText(ctx context.Context, arg SourceUnitParams) error
-	FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (FormTextTxResult, error)
+	ParseTextTx(ctx context.Context, arg SourceUnitParams) (Application, error)
+	FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (Application, error)
 }
 
 type SQLStore struct {
@@ -44,22 +44,28 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 }
 
 type SourceUnitParams struct {
-	ApplicationID int64  `json:"application_id"`
-	Text          string `json:"text"`
+	Name string `json:"name"`
+	Text string `json:"text"`
 }
 
-type TranslationUnitParams struct {
-	ApplicationID int64 `json:"application_id"`
-	SourceUnitID  int64 `json:"source_unit_id"`
-}
-
-func (store *SQLStore) ParseText(ctx context.Context, arg SourceUnitParams) error {
+func (store *SQLStore) ParseTextTx(ctx context.Context, arg SourceUnitParams) (Application, error) {
+	var application Application
 	err := store.execTx(ctx, func(q *Queries) error {
-		// var err error
+		var err error
+
+		argCreate := CreateApplicationParams{
+			Name:       arg.Name,
+			SourceText: arg.Text,
+		}
+
+		application, err = q.CreateApplication(ctx, argCreate)
+		if err != nil {
+			return err
+		}
 		ParsedTextArr := util.ParseTextUtil(arg.Text)
 		for _, parsed := range ParsedTextArr {
 			src_unit, err := q.CreateSourceUnit(ctx, CreateSourceUnitParams{
-				ApplicationID: int32(arg.ApplicationID),
+				ApplicationID: int32(application.ID),
 				Text: sql.NullString{
 					String: parsed,
 					Valid:  true,
@@ -70,7 +76,7 @@ func (store *SQLStore) ParseText(ctx context.Context, arg SourceUnitParams) erro
 			}
 
 			translationUnit, err := q.CreateTranslationUnit(ctx, CreateTranslationUnitParams{
-				ApplicationID: int32(arg.ApplicationID),
+				ApplicationID: int32(application.ID),
 				SourceUnitID:  int32(src_unit.ID),
 			})
 			if err != nil {
@@ -90,19 +96,15 @@ func (store *SQLStore) ParseText(ctx context.Context, arg SourceUnitParams) erro
 		}
 		return nil
 	})
-	return err
+	return application, err
 }
 
 type TranslationUnitFormParams struct {
 	ApplicationID int64 `form:"application_id" binding:"required"`
 }
 
-type FormTextTxResult struct {
-	Application Application `json:"application"`
-}
-
-func (store *SQLStore) FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (FormTextTxResult, error) {
-	var result FormTextTxResult
+func (store *SQLStore) FormTextTx(ctx context.Context, arg TranslationUnitFormParams) (Application, error) {
+	var application Application
 	err := store.execTx(ctx, func(q *Queries) error {
 
 		translationList, err := q.ListSourceUnitJoinNoLimit(ctx, int32(arg.ApplicationID))
@@ -133,11 +135,11 @@ func (store *SQLStore) FormTextTx(ctx context.Context, arg TranslationUnitFormPa
 			},
 		}
 
-		result.Application, err = q.UpdateApplication(ctx, arg2)
+		application, err = q.UpdateApplication(ctx, arg2)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
-	return result, err
+	return application, err
 }
